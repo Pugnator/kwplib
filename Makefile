@@ -25,7 +25,7 @@ OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 
 KWPEXEC:=$(OUTDIR)/kwp.exe
 
-FLAGS:=-ffunction-sections -fdata-sections -I.
+FLAGS:=-ffunction-sections -fms-extensions -fdata-sections -I.
 CFLAGS+=-std=gnu++11 $(FLAGS)
 LDFLAGS:=-Wl,--gc-sections
 

@@ -3,90 +3,191 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
+#include <kwp.hpp>
 
 using namespace std;
 
-HANDLE open_com(uint8_t num)
+namespace KWP2000
 {
-  std::string port = "\\\\.\\COM8";
-  HANDLE hComm = CreateFile("\\\\.\\COM8", GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
 
-  if (hComm == INVALID_HANDLE_VALUE)
+const kwp_ident kwp_table[] =
+    {
+        {.request = 0x81, .reply = 0xC1, .inter_name = "startCommunication", .short_name = KWP_STC},
+        {.request = 0x82, .reply = 0xC2, .inter_name = "stopCommunication", .short_name = KWP_SPC},
+        {.request = 0x10, .reply = 0x50, .inter_name = "startDiagnosticSession", .short_name = KWP_STDS},
+        {.request = 0x20, .reply = 0x60, .inter_name = "stopDiagnosticSession", .short_name = KWP_SPDS},
+        {.request = 0x11, .reply = 0x51, .inter_name = "ecuReset", .short_name = KWP_ER},
+        {.request = 0x14, .reply = 0x54, .inter_name = "clearDiagnosticInformation", .short_name = KWP_CDI},
+        {.request = 0x18, .reply = 0x58, .inter_name = "readDiagnosticTroubleCodesByStatus", .short_name = KWP_RDTCBS},
+        {.request = 0x1A, .reply = 0x5A, .inter_name = "readEcuIdentification", .short_name = KWP_REI},
+        {.request = 0x21, .reply = 0x61, .inter_name = "readDataByLocalIdentifier", .short_name = KWP_RDBLI},
+        {.request = 0x23, .reply = 0x63, .inter_name = "readMemoryByAddress", .short_name = KWP_RMBA},
+        {.request = 0x30, .reply = 0x70, .inter_name = "inputOutputControlByLocalIdentifier", .short_name = KWP_IOCBLI},
+        {.request = 0x3B, .reply = 0x7B, .inter_name = "writeDataByLocalIdentifier", .short_name = KWP_WDBLI},
+        {.request = 0x3E, .reply = 0x7E, .inter_name = "testerPresent", .short_name = KWP_TP},
+        {0, 0}};
+
+
+const kwp_reply kwp_reply_table[]=
+{
+  {.reply = 0x10, .inter_name="generalReject", .short_name=GR},
+  {0, 0}
+};
+
+kwpTester::kwpTester(uint8_t commport, uint32_t baudrate)
+{
+  try
   {
-    throw "Error in opening serial port";
+    port = open_port(commport, baudrate);
   }
+  catch (const char *e)
+  {
+    puts(e);
+    rethrow_if_nested(e);
+  }
+}
 
-  /*
-  81 10 F1 81 03 -> 83F110C16B8F3F
-83 10 F1 10 81 0A 1F -> 82F110508154
-8210F13E01C2 -> 81F1107E00
-8410F1300F0601CB -> 84F110700F06010B
-8510F12300F30008A4 -> 80F11009630000000000000000ED
-8510F1230000C01079 -> 80F11011632672BAD31EBFE4A5153F2108BD9C7B6A3B
-8110F120A2 -> 81F11060E2
-8110F18204 -> 81F110C244
-  */
+kwpTester::~kwpTester()
+{
+  close_port(port);
+}
+
+HANDLE kwpTester::open_port(uint8_t commport, uint32_t baudrate)
+{
+  std::string device_path = "\\\\.\\COM" + std::to_string(commport);
+  HANDLE port_handle = CreateFile(device_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+
+  if (port_handle == INVALID_HANDLE_VALUE)
+  {
+    throw_with_nested("Error opening serial port");
+  }
 
   DCB dcbSerialParams = {0};
   dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
-  GetCommState(hComm, &dcbSerialParams);
-  dcbSerialParams.BaudRate = CBR_38400;
+  GetCommState(port_handle, &dcbSerialParams);
+  dcbSerialParams.BaudRate = baudrate;
   dcbSerialParams.ByteSize = 8;
   dcbSerialParams.StopBits = ONESTOPBIT;
   dcbSerialParams.Parity = NOPARITY;
-  SetCommState(hComm, &dcbSerialParams);
+  SetCommState(port_handle, &dcbSerialParams);
 
-  //SetCommMask(hComm, EV_RXCHAR);
-
-  return hComm;
+  SetCommMask(port_handle, EV_RXCHAR);
+  return port_handle;
 }
 
-uint8_t calc_checksum(uint8_t *data, size_t len)
+void kwpTester::close_port(HANDLE commport)
 {
-  return 0;
+  CloseHandle(commport);
 }
 
-void wait4data(HANDLE hComm)
+kwp_message kwpTester::read_response()
 {
   DWORD dwEventMask;
-  WaitCommEvent(hComm, &dwEventMask, NULL);
-  uint8_t TempChar;          //Temporary character used for reading
-  uint8_t SerialBuffer[256]; //Buffer for storing Rxed Data
+  WaitCommEvent(port, &dwEventMask, NULL);
+  uint8_t TempChar;              //Temporary character used for reading
+  uint8_t SerialBuffer[256 + 5]; //Buffer for storing Rxed Data
   DWORD NoBytesRead;
   int i = 0;
-
+  kwp_message response;
   do
   {
-    ReadFile(hComm,            //Handle of the Serial port
-             &TempChar,        //Temporary character
-             sizeof(TempChar), //Size of TempChar
-             &NoBytesRead,     //Number of bytes read
-             NULL);
-
+    ReadFile(port, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
     SerialBuffer[i] = TempChar; // Store Tempchar into buffer
-    printf("0x%02X ", TempChar);
     i++;
   } while (NoBytesRead > 0);
-  puts("");
+  return response;
 }
+
+void kwpTester::send_message(kwp_message &message)
+{
+  message.update_header();
+  message.update_crc();
+  printf("Message header: 0x%X 0x%X 0x%X\r\n", message.data[0], message.data[1], message.data[2]);
+  printf("Sending message of type 0x%X, length %u [CRC: 0x%X]\r\n", message.data[message.header.type], message.header.fmt, message.data[message.header.type + message.header.fmt]);
+  DWORD bw;
+  if (!WriteFile(port, reinterpret_cast<void *>(message.data), message.length + message.header.type + 1, &bw, NULL))
+  {
+    throw_with_nested("Writing to port failed with " + GetLastError());
+  }
+}
+
+const kwp_ident *kwpTester::find_ident(const kwp_short_name &name)
+{
+  for (auto i = 0; kwp_table[i].request; ++i)
+  {
+    if (kwp_table[i].short_name == name)
+    {
+      return &kwp_table[i];
+    }
+  }
+  return nullptr;
+}
+
+void kwp_message::add_ident(const kwp_ident &id)
+{
+  data[header.type] = id.request;
+  length++;
+}
+
+void kwp_message::update_format()
+{
+  header.fmt |= 1 << 7;
+  header.fmt |= length & 0b00111111;
+}
+
+void kwp_message::update_crc()
+{
+  checksum = header.get_sum();
+  for (auto i = 0; i < length; ++i)
+  {
+    checksum += data[header.type + i];
+  }
+  data[header.type + length] = checksum;
+}
+
+void kwp_message::update_header()
+{
+  update_format();
+  data[0] = header.fmt;
+  data[1] = header.tgt;
+  data[2] = header.src;
+  if (header.type == HEADER_TYPE_4)
+  {
+    data[3] = length;
+  }
+}
+
+uint8_t kwp_header::get_sum()
+{
+  return fmt + tgt + src + len;
+}
+
+bool kwpTester::start()
+{
+  kwp_message message;
+  const kwp_ident *rq = find_ident(KWP_STC);
+  if (rq)
+  {
+    message.add_ident(*rq);
+    send_message(message);
+    read_response();
+  }
+  return true;
+}
+} // namespace KWP2000
 
 int main()
 {
 
   DWORD bw = 0;
 
-  HANDLE hComm = open_com(8);
-
-  const uint8_t startCommunication[] = {0x81, 0x10, 0xf1, 0x81, 0x03};
-
-  const uint8_t readDataByLocalIdentifier_RLI_ASS[] = {0x82, 0x10, 0xF1, 0x21, 0x01, 0xA5};
-
-  if (!WriteFile(hComm, startCommunication, sizeof(startCommunication), &bw, NULL))
+  try
   {
-    printf("Failed to write byte %u", GetLastError());
+    KWP2000::kwpTester tester(8, CBR_38400);
+    tester.start();
   }
-  wait4data(hComm);
-
-  CloseHandle(hComm); //Closing the Serial Port
+  catch (...)
+  {
+  }
   return 0;
 }
