@@ -1,5 +1,10 @@
 #pragma once
 
+#include <stdio.h>
+#include <stdint.h>
+#include <string>
+#include <cstring>
+
 namespace KWP2000
 {
 
@@ -43,9 +48,9 @@ typedef struct
   uint8_t reply;
   const char *inter_name;
   const kwp_short_name short_name;
-} kwp_ident;
+} kwp_identificator;
 
-extern const kwp_ident kwp_table[];
+extern const kwp_identificator kwp_table[];
 typedef struct
 {
   uint8_t reply;
@@ -78,7 +83,8 @@ typedef struct kwp_message
   uint8_t checksum = 0;
   uint8_t length = 0;
   uint8_t source;
-  void add_ident(const kwp_ident &id);
+  void add_ident(const kwp_identificator &id);
+  const kwp_identificator *get_ident();
   void add_payload(uint8_t *_data, uint8_t size);
   void update_header();
   void update_crc();
@@ -86,26 +92,4 @@ typedef struct kwp_message
   void print();
 } kwp_message;
 
-class kwpTester
-{
-public:
-  kwpTester(uint8_t commport, uint32_t baudrate);
-  ~kwpTester();
-
-public:
-  bool start_communication();
-
-private:
-  HANDLE open_port(uint8_t commport, uint32_t baudrate);
-  void close_port(HANDLE commport);
-  void send_message(kwp_message &message);
-  kwp_message read_response(kwp_message &request);
-
-private:
-  const kwp_ident *find_ident(const kwp_short_name &name);
-  const kwp_ident *find_ident(const uint8_t &code);
-  kwp_message msg;
-  HANDLE port;
-};
-
-} //namespace KWP2000
+} // namespace KWP2000
