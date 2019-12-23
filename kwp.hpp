@@ -47,7 +47,7 @@ typedef struct
 
 extern const kwp_ident kwp_table[];
 typedef struct
-{  
+{
   uint8_t reply;
   const char *inter_name;
   const kwp_reply_short_name short_name;
@@ -77,10 +77,13 @@ typedef struct kwp_message
   uint8_t data[KWP_MAX_DATA_SIZE + 4 + 1] = {0}; //Data + header + CRC
   uint8_t checksum = 0;
   uint8_t length = 0;
+  uint8_t source;
   void add_ident(const kwp_ident &id);
+  void add_payload(uint8_t *_data, uint8_t size);
   void update_header();
-  void update_crc();  
+  void update_crc();
   void update_format();
+  void print();
 } kwp_message;
 
 class kwpTester
@@ -90,13 +93,13 @@ public:
   ~kwpTester();
 
 public:
-  bool start();
+  bool start_communication();
 
 private:
   HANDLE open_port(uint8_t commport, uint32_t baudrate);
   void close_port(HANDLE commport);
   void send_message(kwp_message &message);
-  kwp_message read_response();
+  kwp_message read_response(kwp_message &request);
 
 private:
   const kwp_ident *find_ident(const kwp_short_name &name);

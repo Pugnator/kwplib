@@ -27,12 +27,16 @@ const kwp_ident kwp_table[] =
         {.request = 0x3E, .reply = 0x7E, .inter_name = "testerPresent", .short_name = KWP_TP},
         {0, 0}};
 
-
-const kwp_reply kwp_reply_table[]=
-{
-  {.reply = 0x10, .inter_name="generalReject", .short_name=GR},
-  {0, 0}
-};
+const kwp_reply kwp_reply_table[] =
+    {
+        {.reply = 0x10, .inter_name = "generalReject", .short_name = GR},
+        {.reply = 0x11, .inter_name = "serviceNotSupported", .short_name = SNS},
+        {.reply = 0x12, .inter_name = "subFunctionNotSupported-invalidFormat", .short_name = SFNS_IF},
+        {.reply = 0x21, .inter_name = "busy-RepeatRequest", .short_name = B_RR},
+        {.reply = 0x31, .inter_name = "requestOutOfRange", .short_name = ROOR},
+        {.reply = 0x72, .inter_name = "transferAborted", .short_name = GR},
+        {.reply = 0x77, .inter_name = "blockTransferDataChecksumError", .short_name = BTDCE},
+        {0, 0}};
 
 kwpTester::kwpTester(uint8_t commport, uint32_t baudrate)
 {
@@ -80,21 +84,50 @@ void kwpTester::close_port(HANDLE commport)
   CloseHandle(commport);
 }
 
-kwp_message kwpTester::read_response()
+kwp_message kwpTester::read_response(kwp_message &request)
 {
   DWORD dwEventMask;
   WaitCommEvent(port, &dwEventMask, NULL);
-  uint8_t TempChar;              //Temporary character used for reading
-  uint8_t SerialBuffer[256 + 5]; //Buffer for storing Rxed Data
+  uint8_t TempChar;
+  uint8_t SerialBuffer[1024] = {0};
   DWORD NoBytesRead;
-  int i = 0;
+  unsigned i = 0;
   kwp_message response;
   do
   {
     ReadFile(port, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
-    SerialBuffer[i] = TempChar; // Store Tempchar into buffer
-    i++;
+    SerialBuffer[i++] = TempChar;
   } while (NoBytesRead > 0);
+  i--;
+
+  auto offset = request.length + 4;
+  //Skip echo
+  response.header.fmt = SerialBuffer[offset];
+  response.header.tgt = SerialBuffer[offset + 1];
+  response.header.src = SerialBuffer[offset + 2];
+  
+  auto payld_size = response.header.fmt & 0x3F;
+  response.header.type = payld_size ? HEADER_TYPE_3 : HEADER_TYPE_4;
+  if (response.header.type == HEADER_TYPE_3)
+  {
+    response.length = payld_size;
+  }
+  else
+  {
+    response.length = SerialBuffer[offset + 3];
+  }
+
+  for(auto j = offset; j < i; j++)
+  {
+    printf("%X ", SerialBuffer[j]);
+  }
+  puts("");
+
+  response.add_payload(&SerialBuffer[offset + response.header.type], response.length);
+  response.checksum = SerialBuffer[offset + response.header.type  + response.length];  
+  printf("CRC: 0x%X\r\n", response.checksum);
+  puts("Got...");
+  response.print();
   return response;
 }
 
@@ -102,8 +135,8 @@ void kwpTester::send_message(kwp_message &message)
 {
   message.update_header();
   message.update_crc();
-  printf("Message header: 0x%X 0x%X 0x%X\r\n", message.data[0], message.data[1], message.data[2]);
-  printf("Sending message of type 0x%X, length %u [CRC: 0x%X]\r\n", message.data[message.header.type], message.header.fmt, message.data[message.header.type + message.header.fmt]);
+  puts("Sending...");
+  message.print();
   DWORD bw;
   if (!WriteFile(port, reinterpret_cast<void *>(message.data), message.length + message.header.type + 1, &bw, NULL))
   {
@@ -127,6 +160,21 @@ void kwp_message::add_ident(const kwp_ident &id)
 {
   data[header.type] = id.request;
   length++;
+}
+
+void kwp_message::add_payload(uint8_t *_data, uint8_t size)
+{
+  length += size;
+  memcpy(data, _data, size);
+}
+
+void kwp_message::print()
+{
+  printf("Message header: 0x%X 0x%X 0x%X\r\n", header.fmt, header.tgt, header.src);
+  printf("Message of type 0x%X, length %u [CRC: 0x%X]\r\n",
+         header.type,
+         header.fmt & 0b00111111,
+         checksum);
 }
 
 void kwp_message::update_format()
@@ -162,7 +210,7 @@ uint8_t kwp_header::get_sum()
   return fmt + tgt + src + len;
 }
 
-bool kwpTester::start()
+bool kwpTester::start_communication()
 {
   kwp_message message;
   const kwp_ident *rq = find_ident(KWP_STC);
@@ -170,7 +218,7 @@ bool kwpTester::start()
   {
     message.add_ident(*rq);
     send_message(message);
-    read_response();
+    auto resp = read_response(message);
   }
   return true;
 }
@@ -184,7 +232,7 @@ int main()
   try
   {
     KWP2000::kwpTester tester(8, CBR_38400);
-    tester.start();
+    tester.start_communication();
   }
   catch (...)
   {
