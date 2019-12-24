@@ -8,17 +8,18 @@ const uint16_t KWP_KEYWORD = 0x6B8F;
 namespace KWP2000
 {
 
-class kwpTester
+class kwpClient
 {
 public:
-  kwpTester(uint8_t commport, uint32_t baudrate);
-  ~kwpTester();
+  kwpClient(uint8_t commport, uint32_t baudrate);
+  ~kwpClient();
 
 public:  
-  std::unique_ptr<kwp_message> process_command(const kwp_short_name& cmd, const std::initializer_list<uint8_t>& params);
+  std::unique_ptr<kwp_message> process_command(const service_alias& cmd, const std::initializer_list<uint8_t>& params);
   bool start_communication();
   bool stop_communication();
   bool start_diagnostic_session();
+  bool stop_diagnostic_session();
   bool read_ECUid();
 
 private:
@@ -28,9 +29,9 @@ private:
   std::unique_ptr<kwp_message> read_response(kwp_message &request);
 
 private:
-  const kwp_identificator *find_ident(const kwp_short_name &name);
-  const kwp_identificator *find_ident(const uint8_t &code);
-  HANDLE port;
+  const kwp_service *find_ident(const service_alias &name);
+  const kwp_service *find_ident(const uint8_t &code);
+  HANDLE porth;
 };
 
 } //namespace KWP2000

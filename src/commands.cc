@@ -4,9 +4,9 @@
 namespace KWP2000
 {
 
-std::unique_ptr<kwp_message> kwpTester::process_command(const kwp_short_name &cmd, const std::initializer_list<uint8_t> &params)
+std::unique_ptr<kwp_message> kwpClient::process_command(const service_alias &cmd, const std::initializer_list<uint8_t> &params)
 {
-  const kwp_identificator *rq = find_ident(cmd);
+  const kwp_service *rq = find_ident(cmd);
   if (!rq)
   {
     return nullptr;
@@ -21,7 +21,7 @@ std::unique_ptr<kwp_message> kwpTester::process_command(const kwp_short_name &cm
   return read_response(message);
 }
 
-bool kwpTester::start_communication()
+bool kwpClient::start_communication()
 {
   auto resp = process_command(KWP_STC, {});
   auto *rp = resp->get_ident();
@@ -37,10 +37,10 @@ bool kwpTester::start_communication()
   return rp && rp->short_name == KWP_STC;
 }
 
-bool kwpTester::stop_communication()
+bool kwpClient::stop_communication()
 {
   auto resp = process_command(KWP_SPC, {});
-  const kwp_identificator *rp = resp->get_ident();
+  const kwp_service *rp = resp->get_ident();
   if (rp->bad())
   {
     return false;
@@ -48,10 +48,10 @@ bool kwpTester::stop_communication()
   return rp && rp->short_name == KWP_SPC;
 }
 
-bool kwpTester::start_diagnostic_session()
+bool kwpClient::start_diagnostic_session()
 {
   auto resp = process_command(KWP_STDS, {0x81, 0x26});
-  const kwp_identificator *rp = resp->get_ident();
+  const kwp_service *rp = resp->get_ident();
   if (rp->bad())
   {
     return false;
@@ -59,10 +59,10 @@ bool kwpTester::start_diagnostic_session()
   return true;
 }
 
-bool kwpTester::read_ECUid()
+bool kwpClient::read_ECUid()
 {
   auto resp = process_command(KWP_REI, {0x80});
-  const kwp_identificator *rp = resp->get_ident();
+  const kwp_service *rp = resp->get_ident();
   if (rp->bad())
   {
     return false;

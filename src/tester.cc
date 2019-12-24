@@ -6,11 +6,11 @@ using namespace std;
 namespace KWP2000
 {
 
-kwpTester::kwpTester(uint8_t commport, uint32_t baudrate)
+kwpClient::kwpClient(uint8_t commport, uint32_t baudrate)
 {
   try
   {
-    port = open_port(commport, baudrate);
+    porth = open_port(commport, baudrate);
   }
   catch (const char *e)
   {
@@ -19,12 +19,12 @@ kwpTester::kwpTester(uint8_t commport, uint32_t baudrate)
   }
 }
 
-kwpTester::~kwpTester()
+kwpClient::~kwpClient()
 {
-  close_port(port);
+  close_port(porth);
 }
 
-HANDLE kwpTester::open_port(uint8_t commport, uint32_t baudrate)
+HANDLE kwpClient::open_port(uint8_t commport, uint32_t baudrate)
 {
   std::string device_path = "\\\\.\\COM" + std::to_string(commport);
   HANDLE port_handle = CreateFile(device_path.c_str(), GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -47,15 +47,15 @@ HANDLE kwpTester::open_port(uint8_t commport, uint32_t baudrate)
   return port_handle;
 }
 
-void kwpTester::close_port(HANDLE commport)
+void kwpClient::close_port(HANDLE commport)
 {
   CloseHandle(commport);
 }
 
-std::unique_ptr<kwp_message> kwpTester::read_response(kwp_message &request)
+std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
 {
   DWORD dwEventMask;
-  WaitCommEvent(port, &dwEventMask, NULL);
+  WaitCommEvent(porth, &dwEventMask, NULL);
   uint8_t TempChar;
   uint8_t SerialBuffer[1024] = {0};
   DWORD NoBytesRead;
@@ -63,19 +63,19 @@ std::unique_ptr<kwp_message> kwpTester::read_response(kwp_message &request)
   std::unique_ptr<kwp_message> response(new kwp_message);
   do
   {
-    ReadFile(port, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
+    ReadFile(porth, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
     SerialBuffer[i++] = TempChar;
   } while (NoBytesRead > 0);
   i--;
 
   auto offset = request.length + 4;
   //Skip echo
-  response->header.fmt = SerialBuffer[offset];
-  response->header.tgt = SerialBuffer[offset + 1];
-  response->header.src = SerialBuffer[offset + 2];
-  auto payld_size = response->header.fmt & 0x3F;  
-  response->header.type = payld_size ? HEADER_TYPE_3 : HEADER_TYPE_4;
-  if (response->header.type == HEADER_TYPE_3)
+  response->header.format = SerialBuffer[offset];
+  response->header.target = SerialBuffer[offset + 1];
+  response->header.source = SerialBuffer[offset + 2];
+  auto payld_size = response->header.format & 0x3F;  
+  response->header.type = payld_size ? HEADER_SHORT : HEADER_LONG;
+  if (response->header.type == HEADER_SHORT)
   {
     response->length = payld_size;
   }
@@ -91,26 +91,26 @@ std::unique_ptr<kwp_message> kwpTester::read_response(kwp_message &request)
   return response;
 }
 
-void kwpTester::send_message(kwp_message &message)
+void kwpClient::send_message(kwp_message &message)
 {
   message.update_header();
   message.update_crc();
   puts("Sending...");
   message.print();
   DWORD bw;
-  if (!WriteFile(port, reinterpret_cast<void *>(message.data), message.length + message.header.type + 1, &bw, NULL))
+  if (!WriteFile(porth, reinterpret_cast<void *>(message.data), message.length + message.header.type + 1, &bw, NULL))
   {
     throw_with_nested("Writing to port failed with " + GetLastError());
   }
 }
 
-const kwp_identificator *kwpTester::find_ident(const kwp_short_name &name)
+const kwp_service *kwpClient::find_ident(const service_alias &name)
 {
-  for (auto i = 0; kwp_table[i].request; ++i)
+  for (auto i = 0; service_ids[i].request; ++i)
   {
-    if (kwp_table[i].short_name == name)
+    if (service_ids[i].short_name == name)
     {
-      return &kwp_table[i];
+      return &service_ids[i];
     }
   }
   return nullptr;
@@ -124,7 +124,7 @@ int main()
 
   try
   {
-    KWP2000::kwpTester tester(8, CBR_38400);
+    KWP2000::kwpClient tester(8, CBR_38400);
     if (tester.start_communication())
     {
       tester.start_diagnostic_session();

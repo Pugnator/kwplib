@@ -13,7 +13,7 @@ const uint8_t IMMOBILIZER_ADDRESS = 0xC0; //SAE J2178
 const uint8_t KWP_HEADER_PH_ADDR = 2;
 const uint8_t KWP_MAX_DATA_SIZE = 128;
 
-typedef enum kwp_short_name
+typedef enum service_alias
 {
   KWP_STC = 1,
   KWP_SPC,
@@ -29,9 +29,9 @@ typedef enum kwp_short_name
   KWP_WDBLI,
   KWP_TP,
   KWP_NR
-} kwp_short_name;
+} service_alias;
 
-typedef enum kwp_reply_short_name
+typedef enum reply_alias
 {
   GR = 1,
   SNS,
@@ -40,40 +40,40 @@ typedef enum kwp_reply_short_name
   ROOR,
   TA,
   BTDCE
-} kwp_reply_short_name;
+} reply_alias;
 
 typedef struct
 {
   uint8_t request;
   uint8_t reply;
-  const char *inter_name;
-  const kwp_short_name short_name;
+  const char *sae_name;
+  const service_alias short_name;
   bool bad() const;
-} kwp_identificator;
+} kwp_service;
 
-extern const kwp_identificator kwp_table[];
+extern const kwp_service service_ids[];
 typedef struct
 {
   uint8_t reply;
-  const char *inter_name;
-  const kwp_reply_short_name short_name;
+  const char *sae_name;
+  const reply_alias short_name;
 } kwp_reply;
 
 extern const kwp_reply kwp_reply_table[];
 
 typedef enum kwp_header_type
 {
-  HEADER_TYPE_3 = 3,
-  HEADER_TYPE_4 = 4
+  HEADER_SHORT = 3,
+  HEADER_LONG = 4
 } kwp_header_type;
 
 typedef struct kwp_header
 {
-  uint8_t fmt = 0;
-  uint8_t tgt = ECU_ADDRESS;
-  uint8_t src = TESTER_ADDRESS;
-  uint8_t len = 0;
-  kwp_header_type type = HEADER_TYPE_3;
+  uint8_t format = 0;
+  uint8_t target = ECU_ADDRESS;
+  uint8_t source = TESTER_ADDRESS;
+  uint8_t length = 0;
+  kwp_header_type type = HEADER_SHORT;
   uint8_t get_sum();
 } kwp_header;
 
@@ -84,13 +84,13 @@ typedef struct kwp_message
   uint8_t checksum = 0;
   uint8_t length = 0;
   uint8_t source;
-  void add_ident(const kwp_identificator &id);
+  void add_ident(const kwp_service &id);
   void add_param(const uint8_t &param);
-  const kwp_identificator *get_ident();
+  const kwp_service *get_ident();
   void add_payload(uint8_t *_data, uint8_t size);
   void update_header();
   void update_crc();
-  void update_format();
+  void update_format_byte();
   void print();
 } kwp_message;
 
