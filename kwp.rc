@@ -1,4 +1,4 @@
-#include "resources.h"
+#include "include/resources.hpp"
 AppIcon ICON "serial.ico"
 id ICON "serial.ico"
 

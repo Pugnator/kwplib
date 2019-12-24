@@ -15,18 +15,22 @@ else
 endif
 MKDIR_P = mkdir -p
 
+SRCDIR:=src
 OBJDIR:=obj
 OUTDIR:=bin
 
 
-SRC:=main.cc message.cc commands.cc
+SRC:=\
+    $(SRCDIR)/tester.cc \
+    $(SRCDIR)/message.cc \
+    $(SRCDIR)/commands.cc
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 
 KWPEXEC:=$(OUTDIR)/kwp.exe
 
 FLAGS:=-ffunction-sections -fms-extensions -fdata-sections -I.
-CFLAGS+=-std=gnu++11 $(FLAGS)
+CFLAGS+=-std=gnu++11 $(FLAGS) -Iinclude
 LDFLAGS:=-Wl,--gc-sections
 
 .PHONY: all
