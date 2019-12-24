@@ -1,4 +1,3 @@
-#include <windows.h>
 #include <message.hpp>
 #include <tester.hpp>
 
@@ -53,7 +52,7 @@ void kwpTester::close_port(HANDLE commport)
   CloseHandle(commport);
 }
 
-kwp_message kwpTester::read_response(kwp_message &request)
+std::unique_ptr<kwp_message> kwpTester::read_response(kwp_message &request)
 {
   DWORD dwEventMask;
   WaitCommEvent(port, &dwEventMask, NULL);
@@ -61,7 +60,7 @@ kwp_message kwpTester::read_response(kwp_message &request)
   uint8_t SerialBuffer[1024] = {0};
   DWORD NoBytesRead;
   unsigned i = 0;
-  kwp_message response;
+  std::unique_ptr<kwp_message> response(new kwp_message);
   do
   {
     ReadFile(port, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
@@ -71,25 +70,25 @@ kwp_message kwpTester::read_response(kwp_message &request)
 
   auto offset = request.length + 4;
   //Skip echo
-  response.header.fmt = SerialBuffer[offset];
-  response.header.tgt = SerialBuffer[offset + 1];
-  response.header.src = SerialBuffer[offset + 2];
+  response->header.fmt = SerialBuffer[offset];
+  response->header.tgt = SerialBuffer[offset + 1];
+  response->header.src = SerialBuffer[offset + 2];
 
-  auto payld_size = response.header.fmt & 0x3F;
-  response.header.type = payld_size ? HEADER_TYPE_3 : HEADER_TYPE_4;
-  if (response.header.type == HEADER_TYPE_3)
+  auto payld_size = response->header.fmt & 0x3F;
+  response->header.type = payld_size ? HEADER_TYPE_3 : HEADER_TYPE_4;
+  if (response->header.type == HEADER_TYPE_3)
   {
-    response.length = payld_size;
+    response->length = payld_size;
   }
   else
   {
-    response.length = SerialBuffer[offset + 3];
+    response->length = SerialBuffer[offset + 3];
   }
 
-  response.add_payload(&SerialBuffer[offset + response.header.type], payld_size);
-  response.update_crc();
-  uint8_t msg_checksum = SerialBuffer[offset + response.header.type + payld_size];
-  response.print();
+  response->add_payload(&SerialBuffer[offset + response->header.type], payld_size);
+  response->update_crc();
+  uint8_t msg_checksum = SerialBuffer[offset + response->header.type + payld_size];
+  response->print();
   return response;
 }
 
@@ -117,21 +116,6 @@ const kwp_identificator *kwpTester::find_ident(const kwp_short_name &name)
   }
   return nullptr;
 }
-
-bool kwpTester::start_communication()
-{
-  kwp_message message;
-  const kwp_identificator *rq = find_ident(KWP_STC);
-  if (rq)
-  {
-    message.add_ident(*rq);
-    send_message(message);
-    auto resp = read_response(message);
-    const kwp_identificator *rp = resp.get_ident();
-    return rp && rp->short_name == KWP_STC;
-  }
-  return true;
-}
 } // namespace KWP2000
 
 int main()
@@ -145,6 +129,7 @@ int main()
     if (tester.start_communication())
     {
       puts("Comm started");
+      tester.stop_communication();
     }
   }
   catch (...)

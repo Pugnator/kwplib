@@ -19,7 +19,7 @@ OBJDIR:=obj
 OUTDIR:=bin
 
 
-SRC:=main.cc message.cc
+SRC:=main.cc message.cc commands.cc
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 

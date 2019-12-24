@@ -1,9 +1,8 @@
 #pragma once
-
-#include <stdio.h>
 #include <stdint.h>
 #include <string>
 #include <cstring>
+#include <memory>
 
 namespace KWP2000
 {

@@ -1,4 +1,5 @@
 #pragma once
+#include <windows.h>
 #include <message.hpp>
 
 namespace KWP2000
@@ -12,13 +13,13 @@ public:
 
 public:
   bool start_communication();
-  bool stopCommunication();
+  bool stop_communication();
 
 private:
   HANDLE open_port(uint8_t commport, uint32_t baudrate);
   void close_port(HANDLE commport);
   void send_message(kwp_message &message);
-  kwp_message read_response(kwp_message &request);
+  std::unique_ptr<kwp_message> read_response(kwp_message &request);
 
 private:
   const kwp_identificator *find_ident(const kwp_short_name &name);
