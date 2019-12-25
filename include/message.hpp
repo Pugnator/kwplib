@@ -13,7 +13,37 @@ const uint8_t IMMOBILIZER_ADDRESS = 0xC0; //SAE J2178
 const uint8_t KWP_HEADER_PH_ADDR = 2;
 const uint8_t KWP_MAX_DATA_SIZE = 128;
 
-typedef enum service_id
+typedef union ECU_identification {  
+  struct __attribute__((packed, aligned(128)))
+  {
+    uint8_t VIN[19];
+    uint8_t vehicleManufacturerECUHardwareNumber[16];
+    uint8_t systemSupplierECUHardwareNumber[10];
+    uint8_t systemSupplierECUSoftwareNumber[10];
+    uint8_t systemNameOrEngineType[15];
+    uint8_t repairShopCode[7];
+    uint8_t ProgrammingDate[10]; //(ДД-ММ-ГГГГ
+    uint8_t vehicleManufacturerECUIdentifier[8];
+  };
+  uint8_t data[128] = {'.'};
+} ECU_identification_table;
+
+extern ECU_identification_table ECU_ID;
+
+typedef enum identificationOption
+{
+  ECUIDT = 0x80,
+  VIN = 0x90,
+  VMECUHN = 0x91,
+  SSECUHN = 0x92,
+  SSECUSN = 0x94,
+  SNOET = 0x97,
+  RSC = 0x98,
+  PD = 0x99,
+  VMECUID = 0x9A
+}identificationOption;
+
+typedef enum service_mnemonic
 {
   KWP_STC = 1,
   KWP_SPC,
@@ -29,9 +59,9 @@ typedef enum service_id
   KWP_WDBLI,
   KWP_TP,
   KWP_NR
-} service_id;
+} service_mnemonic;
 
-typedef enum reply_id
+typedef enum reply_nmemonic
 {
   GR = 1,
   SNS,
@@ -40,14 +70,14 @@ typedef enum reply_id
   ROOR,
   TA,
   BTDCE
-} reply_id;
+} reply_nmemonic;
 
 typedef struct
 {
   uint8_t request;
   uint8_t reply;
   const char *sae_name;
-  const service_id short_name;
+  const service_mnemonic short_name;
   bool bad() const;
 } kwp_service;
 
@@ -56,7 +86,7 @@ typedef struct
 {
   uint8_t reply;
   const char *sae_name;
-  const reply_id short_name;
+  const reply_nmemonic short_name;
 } kwp_reply;
 
 extern const kwp_reply kwp_reply_table[];

@@ -1,10 +1,11 @@
 #include <message.hpp>
-#include <tester.hpp>
+#include <client.hpp>
+#include <algorithm>
 
 namespace KWP2000
 {
 
-std::unique_ptr<kwp_message> kwpClient::process_command(const service_id &cmd, const std::initializer_list<uint8_t> &params)
+std::unique_ptr<kwp_message> kwpClient::process_command(const service_mnemonic &cmd, const std::initializer_list<uint8_t> &params)
 {
   puts("\r\n====================\r\n");
   auto rq = find_service_id(cmd);
@@ -67,18 +68,74 @@ bool kwpClient::start_diagnostic_session()
   return true;
 }
 
-bool kwpClient::read_ECUid()
+bool kwpClient::stop_diagnostic_session()
 {
-  auto resp = process_command(KWP_REI, {0x80});
+  auto resp = process_command(KWP_SPDS);
   if (!resp)
   {
     return false;
   }
+  return true;
+}
+
+ECU_identification_table *kwpClient::readEcuIdentification(const identificationOption &options)
+{
+  auto resp = process_command(KWP_REI, {options});
+  if (!resp)
+  {
+    return nullptr;
+  }
   printf("Size: 0x%X [%u]\r\n", resp->length, resp->length);
   for (auto i = 0; i < resp->length; i++)
   {
-    printf("%.2X ", resp->data[resp->header.type + i]);
+    printf("%c", resp->data[resp->header.type + i]);
   }
+
+  std::memcpy(ECU_ID.data, &resp->data[resp->header.type], resp->length - 1);
+
+  return &ECU_ID;
+}
+
+bool kwpClient::clearDiagnosticInformation()
+{
+  return true;
+}
+bool kwpClient::ecuReset()
+{
+  auto resp = process_command(KWP_ER, {0x1});
+  if (!resp)
+  {
+    return false;
+  }
+  return true;
+}
+bool kwpClient::inputOutputControlByLocalIdentifier()
+{
+  return true;
+}
+bool kwpClient::readDataByLocalIdentifier()
+{
+  return true;
+}
+bool kwpClient::readDiagnosticTroubleCodesByStatus()
+{
+  return true;
+}
+bool kwpClient::readMemoryByAddress()
+{
+  return true;
+}
+bool kwpClient::testerPresent(bool responseRequired)
+{
+  auto resp = process_command(KWP_TP, {static_cast<uint8_t>(responseRequired ? 0x1 : 0x2)});
+  if (!resp)
+  {
+    return false;
+  }
+  return true;
+}
+bool kwpClient::writeDataByLocalIdentifier()
+{
   return true;
 }
 } // namespace KWP2000

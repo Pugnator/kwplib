@@ -21,10 +21,10 @@ OUTDIR:=bin
 
 
 SRC:=\
-    $(SRCDIR)/tester.cc \
+    $(SRCDIR)/client.cc \
     $(SRCDIR)/message.cc \
     $(SRCDIR)/commands.cc \
-		$(SRCDIR)/parameters.cc
+		$(SRCDIR)/ids.cc
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 

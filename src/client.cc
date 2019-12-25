@@ -1,5 +1,5 @@
 #include <message.hpp>
-#include <tester.hpp>
+#include <client.hpp>
 
 using namespace std;
 
@@ -112,7 +112,7 @@ void kwpClient::send_message(kwp_message &message)
   }
 }
 
-const kwp_service *kwpClient::find_service_id(const service_id &name)
+const kwp_service *kwpClient::find_service_id(const service_mnemonic &name)
 {
   for (auto i = 0; service_ids[i].request; ++i)
   {
@@ -132,13 +132,17 @@ int main()
 
   try
   {
-    KWP2000::kwpClient tester(9, CBR_38400);
+    KWP2000::kwpClient tester(8, CBR_38400);
     if (tester.start_communication())
     {
       if(!tester.start_diagnostic_session())
         return 1;
-      if(!tester.read_ECUid())
-        return 1;
+      
+      KWP2000::ECU_identification_table* id = tester.readEcuIdentification();
+      if(id)
+      {
+        printf("\r\nvehicleManufacturerECUHardwareNumber: %.*s\r\n", sizeof(id->vehicleManufacturerECUHardwareNumber), id->vehicleManufacturerECUHardwareNumber);
+      }
       if(!tester.stop_communication())
         return 1;
     }
