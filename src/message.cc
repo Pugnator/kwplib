@@ -31,7 +31,7 @@ const kwp_reply kwp_reply_table[] =
         {.reply = 0x77, .sae_name = "blockTransferDataChecksumError", .short_name = BTDCE},
         {0, 0}};
 
-const kwp_service *kwp_message::get_ident()
+const kwp_service *kwp_message::get_service()
 {
   uint8_t id = data[header.type - 1];
   printf("Searching for 0x%X\r\n", id);  
@@ -46,7 +46,7 @@ const kwp_service *kwp_message::get_ident()
   return nullptr;
 }
 
-void kwp_message::add_ident(const kwp_service &id)
+void kwp_message::add_service_id(const kwp_service &id)
 {
   data[header.type] = id.request;
   length++;
@@ -61,15 +61,14 @@ void kwp_message::add_param(const uint8_t &param)
 void kwp_message::add_payload(uint8_t *payload, uint8_t size)
 {
   memcpy(data + header.type - 1, payload, size);
-  length += size;
 }
 
 void kwp_message::print()
 {
   printf("Message header: 0x%X 0x%X 0x%X\r\n", header.format, header.target, header.source);
-  printf("Message of type 0x%X, length %u [CRC: 0x%X]\r\n",
+  printf("Message of type 0x%X, length 0x%X [CRC: 0x%X]\r\n",
          header.type,
-         header.format & 0b00111111,
+         length,
          checksum);
 }
 

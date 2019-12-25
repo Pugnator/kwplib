@@ -13,7 +13,7 @@ const uint8_t IMMOBILIZER_ADDRESS = 0xC0; //SAE J2178
 const uint8_t KWP_HEADER_PH_ADDR = 2;
 const uint8_t KWP_MAX_DATA_SIZE = 128;
 
-typedef enum service_alias
+typedef enum service_id
 {
   KWP_STC = 1,
   KWP_SPC,
@@ -29,9 +29,9 @@ typedef enum service_alias
   KWP_WDBLI,
   KWP_TP,
   KWP_NR
-} service_alias;
+} service_id;
 
-typedef enum reply_alias
+typedef enum reply_id
 {
   GR = 1,
   SNS,
@@ -40,14 +40,14 @@ typedef enum reply_alias
   ROOR,
   TA,
   BTDCE
-} reply_alias;
+} reply_id;
 
 typedef struct
 {
   uint8_t request;
   uint8_t reply;
   const char *sae_name;
-  const service_alias short_name;
+  const service_id short_name;
   bool bad() const;
 } kwp_service;
 
@@ -56,7 +56,7 @@ typedef struct
 {
   uint8_t reply;
   const char *sae_name;
-  const reply_alias short_name;
+  const reply_id short_name;
 } kwp_reply;
 
 extern const kwp_reply kwp_reply_table[];
@@ -84,9 +84,10 @@ typedef struct kwp_message
   uint8_t checksum = 0;
   uint8_t length = 0;
   uint8_t source;
-  void add_ident(const kwp_service &id);
+
+  void add_service_id(const kwp_service &id);
   void add_param(const uint8_t &param);
-  const kwp_service *get_ident();
+  const kwp_service *get_service();
   void add_payload(uint8_t *_data, uint8_t size);
   void update_header();
   void update_crc();

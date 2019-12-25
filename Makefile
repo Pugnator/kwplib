@@ -35,9 +35,9 @@ CFLAGS+=-std=gnu++11 $(FLAGS) -Iinclude
 LDFLAGS:=-Wl,--gc-sections
 
 .PHONY: all
-all: FLAGS+=-O2
+all: FLAGS+=-O0
 all: dirs
-all: $(KWPEXEC) strip
+all: $(KWPEXEC) #strip
 
 .PHONY: debug
 debug: FLAGS+=-O0 -g

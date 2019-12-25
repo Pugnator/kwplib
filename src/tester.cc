@@ -57,36 +57,44 @@ std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
   DWORD dwEventMask;
   WaitCommEvent(porth, &dwEventMask, NULL);
   uint8_t TempChar;
-  uint8_t SerialBuffer[1024] = {0};
+  uint8_t readbuf[512] = {0};
   DWORD NoBytesRead;
-  unsigned i = 0;
+  size_t bytes_total = 0;
   std::unique_ptr<kwp_message> response(new kwp_message);
   do
   {
     ReadFile(porth, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
-    SerialBuffer[i++] = TempChar;
+    readbuf[bytes_total++] = TempChar;
   } while (NoBytesRead > 0);
-  i--;
+
+  bytes_total--;
 
   auto offset = request.length + 4;
   //Skip echo
-  response->header.format = SerialBuffer[offset];
-  response->header.target = SerialBuffer[offset + 1];
-  response->header.source = SerialBuffer[offset + 2];
-  auto payld_size = response->header.format & 0x3F;  
-  response->header.type = payld_size ? HEADER_SHORT : HEADER_LONG;
-  if (response->header.type == HEADER_SHORT)
+  response->header.format = readbuf[offset];
+  response->header.target = readbuf[offset + 1];
+  response->header.source = readbuf[offset + 2];
+  auto short_size = response->header.format & 0x3F;
+
+  auto actual_data_size = bytes_total - offset - 4;
+  printf("Total: %u, Payload: %u\r\n", actual_data_size, short_size);
+
+
+  if (0x80 == response->header.format || actual_data_size > short_size)  //XXX:
   {
-    response->length = payld_size;
+    response->header.type = HEADER_LONG;
+    response->length = readbuf[offset + 3];
   }
   else
   {
-    response->length = SerialBuffer[offset + 3];
+    response->header.type = HEADER_SHORT;
+    response->length = short_size;    
   }
 
-  response->add_payload(&SerialBuffer[offset + response->header.type], payld_size);
+  response->add_payload(&readbuf[offset + response->header.type], response->length);
   response->update_crc();
-  uint8_t msg_checksum = SerialBuffer[offset + response->header.type + payld_size];
+  uint8_t msg_checksum = readbuf[offset + response->header.type + response->length];
+  puts("Receiving...");
   response->print();
   return response;
 }
@@ -104,7 +112,7 @@ void kwpClient::send_message(kwp_message &message)
   }
 }
 
-const kwp_service *kwpClient::find_ident(const service_alias &name)
+const kwp_service *kwpClient::find_service_id(const service_id &name)
 {
   for (auto i = 0; service_ids[i].request; ++i)
   {
@@ -124,12 +132,15 @@ int main()
 
   try
   {
-    KWP2000::kwpClient tester(8, CBR_38400);
+    KWP2000::kwpClient tester(9, CBR_38400);
     if (tester.start_communication())
     {
-      tester.start_diagnostic_session();
-      tester.read_ECUid();
-      tester.stop_communication();
+      if(!tester.start_diagnostic_session())
+        return 1;
+      if(!tester.read_ECUid())
+        return 1;
+      if(!tester.stop_communication())
+        return 1;
     }
   }
   catch (...)

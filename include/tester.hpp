@@ -3,7 +3,7 @@
 #include <message.hpp>
 #include <initializer_list>
 
-const uint16_t KWP_KEYWORD = 0x6B8F;
+const uint16_t KWP_PHY_ADR = 0x6B8F;
 
 namespace KWP2000
 {
@@ -15,7 +15,7 @@ public:
   ~kwpClient();
 
 public:  
-  std::unique_ptr<kwp_message> process_command(const service_alias& cmd, const std::initializer_list<uint8_t>& params);
+  std::unique_ptr<kwp_message> process_command(const service_id& cmd, const std::initializer_list<uint8_t>& params = {});
   bool start_communication();
   bool stop_communication();
   bool start_diagnostic_session();
@@ -29,7 +29,7 @@ private:
   std::unique_ptr<kwp_message> read_response(kwp_message &request);
 
 private:
-  const kwp_service *find_ident(const service_alias &name);
+  const kwp_service *find_service_id(const service_id &name);
   const kwp_service *find_ident(const uint8_t &code);
   HANDLE porth;
 };
