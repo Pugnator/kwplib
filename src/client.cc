@@ -125,6 +125,8 @@ const kwp_service *kwpClient::find_service_id(const service_mnemonic &name)
 }
 } // namespace KWP2000
 
+//8210F12101A5	->	80F11026610100000000000000000000000000000000000000000000000000000000000000000000000009
+
 int main()
 {
 
@@ -132,10 +134,13 @@ int main()
 
   try
   {
-    KWP2000::kwpClient tester(8, CBR_38400);
+    KWP2000::kwpClient tester(9, CBR_38400);
     if (tester.start_communication())
     {
       if(!tester.start_diagnostic_session())
+        return 1;
+
+      if(!tester.testerPresent(true))
         return 1;
       
       KWP2000::ECU_identification_table* id = tester.readEcuIdentification();

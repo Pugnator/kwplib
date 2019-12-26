@@ -86,12 +86,12 @@ ECU_identification_table *kwpClient::readEcuIdentification(const identificationO
     return nullptr;
   }
   printf("Size: 0x%X [%u]\r\n", resp->length, resp->length);
-  for (auto i = 0; i < resp->length; i++)
+  for (auto i = 1; i < resp->length; i++)
   {
     printf("%c", resp->data[resp->header.type + i]);
   }
 
-  std::memcpy(ECU_ID.data, &resp->data[resp->header.type], resp->length - 1);
+  std::memcpy(ECU_ID.data, &resp->data[resp->header.type + 1], sizeof(ECU_identification_table));
 
   return &ECU_ID;
 }
