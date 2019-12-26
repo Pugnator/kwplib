@@ -91,9 +91,10 @@ std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
     response->length = short_size;    
   }
 
-  response->add_payload(&readbuf[offset + response->header.type], response->length);
-  response->update_crc();
+  response->add_payload(&readbuf[offset + response->header.type], response->length);  
   uint8_t msg_checksum = readbuf[offset + response->header.type + response->length];
+  response->data[response->header.type + response->length] = msg_checksum;
+  response->checksum = msg_checksum;
   puts("Receiving...");
   response->print();
   return response;
@@ -134,20 +135,25 @@ int main()
 
   try
   {
-    KWP2000::kwpClient tester(9, CBR_38400);
+    KWP2000::kwpClient tester(8, CBR_38400);
     if (tester.start_communication())
     {
       if(!tester.start_diagnostic_session())
         return 1;
 
-      if(!tester.testerPresent(true))
+      if(!tester.tester_present(true))
         return 1;
       
-      KWP2000::ECU_identification_table* id = tester.readEcuIdentification();
-      if(id)
+      //KWP2000::ECU_identification_table* id = tester.read_ECU_identification();
+      //if(id)
       {
-        printf("\r\nvehicleManufacturerECUHardwareNumber: %.*s\r\n", sizeof(id->vehicleManufacturerECUHardwareNumber), id->vehicleManufacturerECUHardwareNumber);
+        //printf("\r\nvehicleManufacturerECUHardwareNumber: %.*s\r\n", sizeof(id->vehicleManufacturerECUHardwareNumber), id->vehicleManufacturerECUHardwareNumber);
       }
+
+      tester.read_DTC_by_status();
+
+      tester.read_data_by_local_identifier(KWP2000::RLI_ASS);
+
       if(!tester.stop_communication())
         return 1;
     }

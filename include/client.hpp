@@ -16,18 +16,18 @@ public:
 
 public:
   std::unique_ptr<kwp_message> process_command(const service_mnemonic &cmd, const std::initializer_list<uint8_t> &params = {});
-  bool clearDiagnosticInformation();
-  bool ecuReset();
+  bool clear_diagnostic_information(bool clear_all = true);
+  bool ECU_reset();
   bool inputOutputControlByLocalIdentifier();
-  bool readDataByLocalIdentifier();
-  bool readDiagnosticTroubleCodesByStatus();
-  ECU_identification_table* readEcuIdentification(const identificationOption& option = ECUIDT);
+  bool read_data_by_local_identifier(const recordLocalIdentifier& id);
+  bool read_DTC_by_status();
+  ECU_identification_table* read_ECU_identification(const identificationOption& option = ECUIDT);
   bool readMemoryByAddress();
   bool start_communication();
   bool start_diagnostic_session();
   bool stop_communication();
   bool stop_diagnostic_session();
-  bool testerPresent(bool responseRequired);
+  bool tester_present(bool responseRequired);
   bool writeDataByLocalIdentifier();
 
 private:

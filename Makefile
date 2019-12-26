@@ -24,6 +24,7 @@ SRC:=\
     $(SRCDIR)/client.cc \
     $(SRCDIR)/message.cc \
     $(SRCDIR)/commands.cc \
+		$(SRCDIR)/dtc.cc \
 		$(SRCDIR)/ids.cc
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)

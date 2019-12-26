@@ -1,5 +1,6 @@
 #include <message.hpp>
 #include <client.hpp>
+#include <dtc.hpp>
 #include <algorithm>
 
 namespace KWP2000
@@ -78,7 +79,7 @@ bool kwpClient::stop_diagnostic_session()
   return true;
 }
 
-ECU_identification_table *kwpClient::readEcuIdentification(const identificationOption &options)
+ECU_identification_table *kwpClient::read_ECU_identification(const identificationOption &options)
 {
   auto resp = process_command(KWP_REI, {options});
   if (!resp)
@@ -96,11 +97,17 @@ ECU_identification_table *kwpClient::readEcuIdentification(const identificationO
   return &ECU_ID;
 }
 
-bool kwpClient::clearDiagnosticInformation()
+bool kwpClient::clear_diagnostic_information(bool clear_all)
 {
+  auto resp = process_command(KWP_CDI, {static_cast<uint8_t>(clear_all ? 0xFF, 0x00 : 0x00, 0x00)});
+  if (!resp)
+  {
+    return false;
+  }
+
   return true;
 }
-bool kwpClient::ecuReset()
+bool kwpClient::ECU_reset()
 {
   auto resp = process_command(KWP_ER, {0x1});
   if (!resp)
@@ -113,21 +120,46 @@ bool kwpClient::inputOutputControlByLocalIdentifier()
 {
   return true;
 }
-bool kwpClient::readDataByLocalIdentifier()
+bool kwpClient::read_data_by_local_identifier(const recordLocalIdentifier& id)
 {
+  auto resp = process_command(KWP_RDBLI, {id});
+  if (!resp)
+  {
+    return false;
+  }
+  RLI_ASS_tab tab;
+  uint8_t* payload = &resp->data[resp->header.type + 1];
+  std::memcpy(tab.tab, payload, sizeof(tab.tab));
+  for(auto i=0; i< 36; i++)
+  {
+    printf("%02X ", tab.tab[i]);
+  }
+  printf("Water: %X\r\n", tab.cwt);
   return true;
 }
-bool kwpClient::readDiagnosticTroubleCodesByStatus()
+bool kwpClient::read_DTC_by_status()
 {
+  auto resp = process_command(KWP_RDTCBS, {0x00, 0x00, 0x00});
+  if (!resp)
+  {
+    return false;
+  }
+  uint8_t* payload = &resp->data[resp->header.type];
+  uint8_t dtc_num = payload[0];
+  printf("DTC number: %u\r\n", dtc_num);
+  for(auto i = 1; i < resp->length - 1; i+=3)
+  {
+    printf("DTC: P%04X\r\n", (payload[i] << 8) | (payload[i+1] & 0xFF));
+  }
   return true;
 }
 bool kwpClient::readMemoryByAddress()
 {
   return true;
 }
-bool kwpClient::testerPresent(bool responseRequired)
+bool kwpClient::tester_present(bool response_required)
 {
-  auto resp = process_command(KWP_TP, {static_cast<uint8_t>(responseRequired ? 0x1 : 0x2)});
+  auto resp = process_command(KWP_TP, {static_cast<uint8_t>(response_required ? 0x1 : 0x2)});
   if (!resp)
   {
     return false;

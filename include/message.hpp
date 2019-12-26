@@ -13,7 +13,7 @@ const uint8_t IMMOBILIZER_ADDRESS = 0xC0; //SAE J2178
 const uint8_t KWP_HEADER_PH_ADDR = 2;
 const uint8_t KWP_MAX_DATA_SIZE = 128;
 
-typedef union ECU_identification {  
+typedef union ECU_identification {
   struct __attribute__((packed, aligned(128)))
   {
     uint8_t VIN[19];
@@ -28,6 +28,38 @@ typedef union ECU_identification {
   uint8_t data[128] = {'.'};
 } ECU_identification_table;
 
+typedef union RLI_ASS_tab {  
+  struct
+  {
+    uint8_t compl_1;
+    uint8_t compl_2;
+    uint8_t status_1;
+    uint8_t status_2;
+    uint8_t dtc_1;
+    uint8_t dtc_2;
+    uint8_t dtc_3;
+    uint8_t dtc_4;
+    uint8_t cwt;
+    uint8_t afr;
+    uint8_t tps;
+    uint8_t rpm;
+    uint8_t idle_rpm;
+    uint8_t iac;
+    uint8_t correction;
+    uint8_t adv;
+    uint8_t speed;
+    uint8_t voltage;
+    uint8_t lamda_state;
+    uint16_t inj;
+    uint16_t maf;
+    uint16_t caf;
+    uint16_t hff;
+    uint16_t tff;
+    uint16_t eeprom_crc;
+  };
+  uint8_t tab[36];
+} RLI_ASS_tab;
+
 extern ECU_identification_table ECU_ID;
 
 typedef enum identificationOption
@@ -41,7 +73,18 @@ typedef enum identificationOption
   RSC = 0x98,
   PD = 0x99,
   VMECUID = 0x9A
-}identificationOption;
+} identificationOption;
+
+typedef enum recordLocalIdentifier
+{
+  RLI_ASS = 0x1,
+  RLI_EOL = 0x2,
+  RLI_FT = 0x3,
+  RLI_IR = 0xA0,
+  RLI_BSN = 0xA1,
+  RLI_ESN = 0xA2,
+  RLI_MD = 0xA3
+} recordLocalIdentifier;
 
 typedef enum service_mnemonic
 {
