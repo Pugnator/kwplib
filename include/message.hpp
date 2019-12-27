@@ -28,7 +28,7 @@ typedef union ECU_identification {
   uint8_t data[128] = {'.'};
 } ECU_identification_table;
 
-typedef union RLI_ASS_tab {  
+typedef union RLI_ASS_tab {
   struct
   {
     uint8_t compl_1;

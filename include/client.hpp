@@ -19,9 +19,9 @@ public:
   bool clear_diagnostic_information(bool clear_all = true);
   bool ECU_reset();
   bool inputOutputControlByLocalIdentifier();
-  bool read_data_by_local_identifier(const recordLocalIdentifier& id);
+  bool read_data_by_local_identifier(const recordLocalIdentifier &id);
   bool read_DTC_by_status();
-  ECU_identification_table* read_ECU_identification(const identificationOption& option = ECUIDT);
+  ECU_identification_table *read_ECU_identification(const identificationOption &option = ECUIDT);
   bool readMemoryByAddress();
   bool start_communication();
   bool start_diagnostic_session();
