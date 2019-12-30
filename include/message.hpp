@@ -31,34 +31,92 @@ typedef union ECU_identification {
 typedef union RLI_ASS_tab {
   struct
   {
-    uint8_t compl_1;
-    uint8_t compl_2;
-    uint8_t status_1;
-    uint8_t status_2;
-    uint8_t dtc_1;
-    uint8_t dtc_2;
-    uint8_t dtc_3;
-    uint8_t dtc_4;
-    uint8_t cwt;
-    uint8_t afr;
-    uint8_t tps;
-    uint8_t rpm;
-    uint8_t idle_rpm;
-    uint8_t iac;
-    uint8_t correction;
-    uint8_t adv;
-    uint8_t speed;
-    uint8_t voltage;
-    uint8_t lamda_state;
-    uint16_t inj;
-    uint16_t maf;
-    uint16_t caf;
-    uint16_t hff;
-    uint16_t tff;
-    uint16_t eeprom_crc;
+    uint8_t equip_1;     //#1
+    uint8_t equip_2;     //#2
+    uint8_t status_1;    //#3
+    uint8_t status_2;    //#4
+    uint8_t dtc_1;       //#5
+    uint8_t dtc_2;       //#6
+    uint8_t dtc_3;       //#7
+    uint8_t dtc_4;       //#8
+    uint8_t cwt;         //#9
+    uint8_t afr;         //#10
+    uint8_t tps;         //#11
+    uint8_t rpm;         //#12
+    uint8_t idle_rpm;    //#13
+    uint8_t needed_iac;  //#14
+    uint8_t iac;         //#15
+    uint8_t correction;  //#16
+    uint8_t adv;         //#17
+    uint8_t speed;       //#18
+    uint8_t voltage;     //#19
+    uint8_t lamda_state; //#20
+    uint16_t inj;        //#21-22
+    uint16_t maf;        //#24-24
+    uint16_t caf;        //#25-26
+    uint16_t hff;        //#27-28
+    uint16_t tff;        //#29-30
+    uint16_t eeprom_crc; //31-32
   };
-  uint8_t tab[36];
+  uint8_t tab[34];
 } RLI_ASS_tab;
+
+typedef union equipment_word_1 {
+  struct
+  {
+    uint8_t flag : 1;
+  };
+  uint8_t byte;
+} equipment_word_1;
+
+typedef union equipment_word_2 {
+  struct
+  {
+  };
+  uint8_t byte;
+} equipment_word_2;
+
+typedef union run_mode_1 {
+  struct
+  {
+  };
+  uint8_t byte;
+} run_mode_1;
+
+typedef union run_mode_2 {
+  struct
+  {
+  };
+  uint8_t byte;
+} run_mode_2;
+
+typedef union dtc_flags_1 {
+  struct
+  {
+  };
+  uint8_t byte;
+} dtc_flags_1;
+
+typedef union dtc_flags_2 {
+  struct
+  {
+  };
+  uint8_t byte;
+} dtc_flags_2;
+
+typedef union dtc_flags_3 {
+  struct
+  {
+  };
+  uint8_t byte;
+} dtc_flags_3;
+
+typedef union dtc_flags_4 {
+  struct
+  {
+  };
+  uint8_t byte;
+} dtc_flags_4;
 
 extern ECU_identification_table ECU_ID;
 

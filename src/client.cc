@@ -126,8 +126,6 @@ const kwp_service *kwpClient::find_service_id(const service_mnemonic &name)
 }
 } // namespace KWP2000
 
-//8210F12101A5	->	80F11026610100000000000000000000000000000000000000000000000000000000000000000000000009
-
 int main()
 {
 

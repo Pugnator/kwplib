@@ -134,7 +134,8 @@ bool kwpClient::read_data_by_local_identifier(const recordLocalIdentifier& id)
   {
     printf("%02X ", tab.tab[i]);
   }
-  printf("Water: %X\r\n", tab.cwt);
+  puts("");  
+  printf("speed: %X\r\n", tab.speed);
   return true;
 }
 bool kwpClient::read_DTC_by_status()

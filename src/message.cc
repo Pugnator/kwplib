@@ -8,7 +8,7 @@ ECU_identification_table ECU_ID;
 const kwp_service *kwp_message::get_service()
 {
   uint8_t id = data[header.type - 1];
-  printf("Searching for 0x%X\r\n", id);  
+  printf("Searching for 0x%X\r\n", id);
   for (auto i = 0; service_ids[i].request; ++i)
   {
     if (service_ids[i].request == id || service_ids[i].reply == id)
@@ -29,7 +29,7 @@ void kwp_message::add_service_id(const kwp_service &id)
 void kwp_message::add_param(const uint8_t &param)
 {
   printf("Param: 0x%X\r\n", param);
-  data[header.type + length++] = param;  
+  data[header.type + length++] = param;
 }
 
 void kwp_message::add_payload(uint8_t *payload, uint8_t size)
