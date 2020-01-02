@@ -32,7 +32,7 @@ OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 KWPEXEC:=$(OUTDIR)/kwp.exe
 
 FLAGS:=-ffunction-sections -fms-extensions -fdata-sections -I.
-CFLAGS+=-std=gnu++11 $(FLAGS) -Iinclude
+CFLAGS+=-std=gnu++14 $(FLAGS) -Iinclude
 LDFLAGS:=-Wl,--gc-sections
 
 .PHONY: all

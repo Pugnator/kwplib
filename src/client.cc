@@ -1,5 +1,6 @@
 #include <message.hpp>
 #include <client.hpp>
+#include <functional>
 
 using namespace std;
 
@@ -79,8 +80,7 @@ std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
   auto actual_data_size = bytes_total - offset - 4;
   printf("Total: %u, Payload: %u\r\n", actual_data_size, short_size);
 
-
-  if (0x80 == response->header.format || actual_data_size > short_size)  //XXX:
+  if (0x80 == response->header.format || actual_data_size > short_size) //XXX:
   {
     response->header.type = HEADER_LONG;
     response->length = readbuf[offset + 3];
@@ -88,10 +88,10 @@ std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
   else
   {
     response->header.type = HEADER_SHORT;
-    response->length = short_size;    
+    response->length = short_size;
   }
 
-  response->add_payload(&readbuf[offset + response->header.type], response->length);  
+  response->add_payload(&readbuf[offset + response->header.type], response->length);
   uint8_t msg_checksum = readbuf[offset + response->header.type + response->length];
   response->data[response->header.type + response->length] = msg_checksum;
   response->checksum = msg_checksum;
@@ -126,22 +126,31 @@ const kwp_service *kwpClient::find_service_id(const service_mnemonic &name)
 }
 } // namespace KWP2000
 
+template <typename T>
+auto trial(std::function<T> func)
+{
+  auto tries = 10;
+  auto result = func();
+  while (!result && --tries)
+  {
+    result = func();
+  }
+  return result;
+}
+
 int main()
 {
-
-  DWORD bw = 0;
-
   try
   {
-    KWP2000::kwpClient tester(8, CBR_38400);
+    KWP2000::kwpClient tester(3, CBR_38400);
     if (tester.start_communication())
     {
-      if(!tester.start_diagnostic_session())
+      if (!tester.start_diagnostic_session())
         return 1;
 
-      if(!tester.tester_present(true))
+      if (!tester.tester_present(true))
         return 1;
-      
+
       //KWP2000::ECU_identification_table* id = tester.read_ECU_identification();
       //if(id)
       {
@@ -150,9 +159,11 @@ int main()
 
       tester.read_DTC_by_status();
 
-      tester.read_data_by_local_identifier(KWP2000::RLI_ASS);
+      //trial(std::function<std::unique_ptr<KWP2000::RLI_ASS_tab>()>(tester.read_rli_ass));
 
-      if(!tester.stop_communication())
+      //std::unique_ptr<KWP2000::RLI_ASS_tab> rli = tester.read_rli_ass();
+
+      if (!tester.stop_communication())
         return 1;
     }
   }

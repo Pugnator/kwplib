@@ -120,24 +120,24 @@ bool kwpClient::inputOutputControlByLocalIdentifier()
 {
   return true;
 }
-bool kwpClient::read_data_by_local_identifier(const recordLocalIdentifier& id)
+std::unique_ptr<RLI_ASS_tab> kwpClient::read_rli_ass()
 {
-  auto resp = process_command(KWP_RDBLI, {id});
+  auto resp = process_command(KWP_RDBLI, {RLI_ASS});
   if (!resp)
   {
-    return false;
+    return std::unique_ptr<RLI_ASS_tab>();
   }
-  RLI_ASS_tab tab;
+  std::unique_ptr<RLI_ASS_tab> rlitab(new RLI_ASS_tab);
   uint8_t* payload = &resp->data[resp->header.type + 1];
-  std::memcpy(tab.tab, payload, sizeof(tab.tab));
+  std::memcpy(rlitab->tab, payload, sizeof(rlitab->tab));
   for(auto i=0; i< 36; i++)
   {
-    printf("%02X ", tab.tab[i]);
+    printf("%02X ", rlitab->tab[i]);
   }
-  puts("");  
-  printf("speed: %X\r\n", tab.speed);
-  return true;
+  puts("");
+  return rlitab;
 }
+
 bool kwpClient::read_DTC_by_status()
 {
   auto resp = process_command(KWP_RDTCBS, {0x00, 0x00, 0x00});

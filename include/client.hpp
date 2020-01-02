@@ -19,7 +19,7 @@ public:
   bool clear_diagnostic_information(bool clear_all = true);
   bool ECU_reset();
   bool inputOutputControlByLocalIdentifier();
-  bool read_data_by_local_identifier(const recordLocalIdentifier &id);
+  std::unique_ptr<RLI_ASS_tab> read_rli_ass();
   bool read_DTC_by_status();
   ECU_identification_table *read_ECU_identification(const identificationOption &option = ECUIDT);
   bool readMemoryByAddress();

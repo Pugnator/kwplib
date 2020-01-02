@@ -47,7 +47,7 @@ typedef union RLI_ASS_tab {
     uint8_t needed_iac;  //#14
     uint8_t iac;         //#15
     uint8_t correction;  //#16
-    uint8_t adv;         //#17
+    int8_t adv;          //#17
     uint8_t speed;       //#18
     uint8_t voltage;     //#19
     uint8_t lamda_state; //#20
@@ -59,6 +59,17 @@ typedef union RLI_ASS_tab {
     uint16_t eeprom_crc; //31-32
   };
   uint8_t tab[34];
+
+  int16_t get_water_temp();
+  uint16_t get_throttle();
+  uint16_t get_speed();
+  double get_afr();
+  uint16_t get_rpm();
+  uint16_t get_idle_rpm();
+  double get_correction();
+  double get_advance();
+  double get_battery();
+  double get_nbo_voltage();
 } RLI_ASS_tab;
 
 typedef union equipment_word_1 {

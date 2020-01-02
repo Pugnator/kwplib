@@ -84,4 +84,47 @@ uint8_t kwp_header::get_sum()
   return format + target + source + length;
 }
 
+int16_t RLI_ASS_tab::get_water_temp()
+{
+  printf("%u\r\n", cwt);
+  return cwt - 40; //N=E-40 [C]
+}
+
+uint16_t RLI_ASS_tab::get_throttle()
+{
+  return tps;
+}
+uint16_t RLI_ASS_tab::get_speed()
+{
+  return speed;
+}
+double RLI_ASS_tab::get_afr()
+{
+  return 14.7 * (afr + 128); //N=14.7*(E+128)/256
+}
+uint16_t RLI_ASS_tab::get_rpm() //N=E*40 [об/мин]
+{
+  return rpm * 40;
+}
+uint16_t RLI_ASS_tab::get_idle_rpm() //N=E*10 [об/мин]
+{
+  return rpm * 10;
+}
+double RLI_ASS_tab::get_correction() //N=(E+128)/256
+{
+  return (correction + 128) / 256;
+}
+double RLI_ASS_tab::get_advance() //N=E/2 [гр.КВ], где E-знаковое
+{
+  return adv / 2;
+}
+double RLI_ASS_tab::get_battery() //N=5.2 +E*0.05 [В]
+{
+  return 5.2 + (voltage * 0.05);
+}
+double RLI_ASS_tab::get_nbo_voltage() //N=1.25*(Е/256) [В]
+{
+  return 1 / 25 * (lamda_state / 256);
+}
+
 } // namespace KWP2000
