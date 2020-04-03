@@ -22,14 +22,15 @@ std::unique_ptr<kwp_message> kwpClient::process_command(const service_mnemonic &
   }
   send_message(message);
   auto reply = read_response(message);
+
   if (!reply)
   {
-    return std::unique_ptr<kwp_message>();
+    return nullptr;
   }
   auto service = reply->get_service();
   if (!service || service->bad() || service->short_name != cmd)
   {
-    return std::unique_ptr<kwp_message>();
+    return nullptr;
   }
   return reply;
 }
@@ -59,13 +60,21 @@ bool kwpClient::stop_communication()
   return true;
 }
 
-bool kwpClient::start_diagnostic_session()
+bool kwpClient::start_diagnostic_session(const uint8_t baudrate)
 {
-  auto resp = process_command(KWP_STDS, {0x81, 0x26});
+  auto resp = process_command(KWP_STDS, {0x81, baudrate});
   if (!resp)
   {
     return false;
   }
+  //check if we have to increase the baudrate
+  if(baudrate == NORMAL_BAUDRATE)
+  {
+    return true;
+  }
+  close_port(porth);  
+  uint16_t baud = baudrate == HIGH_BAUDRATE ? 38400 : 57600;
+  porth = open_port(portn, baud);
   return true;
 }
 
@@ -125,12 +134,12 @@ std::unique_ptr<RLI_ASS_tab> kwpClient::read_rli_ass()
   auto resp = process_command(KWP_RDBLI, {RLI_ASS});
   if (!resp)
   {
-    return std::unique_ptr<RLI_ASS_tab>();
+    return std::unique_ptr<RLI_ASS_tab>{};
   }
   std::unique_ptr<RLI_ASS_tab> rlitab(new RLI_ASS_tab);
-  uint8_t* payload = &resp->data[resp->header.type + 1];
+  uint8_t *payload = &resp->data[resp->header.type + 1];
   std::memcpy(rlitab->tab, payload, sizeof(rlitab->tab));
-  for(auto i=0; i< 36; i++)
+  for (auto i = 0; i < 36; i++)
   {
     printf("%02X ", rlitab->tab[i]);
   }
@@ -145,12 +154,12 @@ bool kwpClient::read_DTC_by_status()
   {
     return false;
   }
-  uint8_t* payload = &resp->data[resp->header.type];
+  uint8_t *payload = &resp->data[resp->header.type];
   uint8_t dtc_num = payload[0];
   printf("DTC number: %u\r\n", dtc_num);
-  for(auto i = 1; i < resp->length - 1; i+=3)
+  for (auto i = 1; i < resp->length - 1; i += 3)
   {
-    printf("DTC: P%04X\r\n", (payload[i] << 8) | (payload[i+1] & 0xFF));
+    printf("DTC: P%04X\r\n", (payload[i] << 8) | (payload[i + 1] & 0xFF));
   }
   return true;
 }

@@ -21,6 +21,7 @@ OUTDIR:=bin
 
 
 SRC:=\
+		$(SRCDIR)/main.cc \
     $(SRCDIR)/client.cc \
     $(SRCDIR)/message.cc \
     $(SRCDIR)/commands.cc \

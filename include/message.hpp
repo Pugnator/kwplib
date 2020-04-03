@@ -12,6 +12,9 @@ const uint8_t TESTER_ADDRESS = 0xF1;      //SAE J2178
 const uint8_t IMMOBILIZER_ADDRESS = 0xC0; //SAE J2178
 const uint8_t KWP_HEADER_PH_ADDR = 2;
 const uint8_t KWP_MAX_DATA_SIZE = 128;
+const uint8_t NORMAL_BAUDRATE = 0x0A;
+const uint8_t HIGH_BAUDRATE = 0x26;
+const uint8_t ENHANCED_BAUDRATE = 0x39;
 
 typedef union ECU_identification {
   struct __attribute__((packed, aligned(128)))

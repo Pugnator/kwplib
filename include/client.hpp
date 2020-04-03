@@ -24,7 +24,7 @@ public:
   ECU_identification_table *read_ECU_identification(const identificationOption &option = ECUIDT);
   bool readMemoryByAddress();
   bool start_communication();
-  bool start_diagnostic_session();
+  bool start_diagnostic_session(const uint8_t baudrate);
   bool stop_communication();
   bool stop_diagnostic_session();
   bool tester_present(bool responseRequired);
@@ -40,6 +40,7 @@ private:
   const kwp_service *find_service_id(const service_mnemonic &name);
   const kwp_service *find_ident(const uint8_t &code);
   HANDLE porth;
+  uint8_t portn;
 };
 
 } //namespace KWP2000

@@ -99,8 +99,8 @@ uint16_t RLI_ASS_tab::get_speed()
   return speed;
 }
 double RLI_ASS_tab::get_afr()
-{
-  return 14.7 * (afr + 128); //N=14.7*(E+128)/256
+{  
+  return 14.7 * (afr + 128) / 256; //N=14.7*(E+128)/256
 }
 uint16_t RLI_ASS_tab::get_rpm() //N=E*40 [об/мин]
 {
@@ -124,7 +124,7 @@ double RLI_ASS_tab::get_battery() //N=5.2 +E*0.05 [В]
 }
 double RLI_ASS_tab::get_nbo_voltage() //N=1.25*(Е/256) [В]
 {
-  return 1 / 25 * (lamda_state / 256);
+  return 1.25 * (lamda_state / 256);
 }
 
 } // namespace KWP2000

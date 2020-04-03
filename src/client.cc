@@ -1,6 +1,7 @@
 #include <message.hpp>
 #include <client.hpp>
 #include <functional>
+#include <math.h>
 
 using namespace std;
 
@@ -12,6 +13,7 @@ kwpClient::kwpClient(uint8_t commport, uint32_t baudrate)
   try
   {
     porth = open_port(commport, baudrate);
+    portn = commport;
   }
   catch (const char *e)
   {
@@ -44,6 +46,21 @@ HANDLE kwpClient::open_port(uint8_t commport, uint32_t baudrate)
   dcbSerialParams.Parity = NOPARITY;
   SetCommState(port_handle, &dcbSerialParams);
 
+  COMMTIMEOUTS timeouts;
+  if ((GetCommTimeouts(port_handle, &timeouts) == 0))
+  {
+    throw_with_nested("error getting timeouts");
+  }
+  timeouts.ReadIntervalTimeout = 10;
+  timeouts.ReadTotalTimeoutMultiplier = 1;
+  timeouts.ReadTotalTimeoutConstant = 500;
+  timeouts.WriteTotalTimeoutMultiplier = 1;
+  timeouts.WriteTotalTimeoutConstant = 500;
+  if (SetCommTimeouts(port_handle, &timeouts) == 0)
+  {
+    throw_with_nested("error setting timeouts");
+  }
+
   SetCommMask(port_handle, EV_RXCHAR);
   return port_handle;
 }
@@ -57,21 +74,27 @@ std::unique_ptr<kwp_message> kwpClient::read_response(kwp_message &request)
 {
   DWORD dwEventMask;
   WaitCommEvent(porth, &dwEventMask, NULL);
-  uint8_t TempChar;
+  uint8_t tempChar;
   uint8_t readbuf[512] = {0};
   DWORD NoBytesRead;
   size_t bytes_total = 0;
   std::unique_ptr<kwp_message> response(new kwp_message);
   do
   {
-    ReadFile(porth, &TempChar, sizeof(TempChar), &NoBytesRead, NULL);
-    readbuf[bytes_total++] = TempChar;
+    ReadFile(porth, &tempChar, sizeof(tempChar), &NoBytesRead, NULL);
+    if (NoBytesRead)
+    {
+      readbuf[bytes_total++] = tempChar;
+    }
   } while (NoBytesRead > 0);
-
-  bytes_total--;
 
   auto offset = request.length + 4;
   //Skip echo
+  if (offset == bytes_total)
+  {
+    //we have only echo
+    return nullptr;
+  }
   response->header.format = readbuf[offset];
   response->header.target = readbuf[offset + 1];
   response->header.source = readbuf[offset + 2];
@@ -136,39 +159,4 @@ auto trial(std::function<T> func)
     result = func();
   }
   return result;
-}
-
-int main()
-{
-  try
-  {
-    KWP2000::kwpClient tester(3, CBR_38400);
-    if (tester.start_communication())
-    {
-      if (!tester.start_diagnostic_session())
-        return 1;
-
-      if (!tester.tester_present(true))
-        return 1;
-
-      //KWP2000::ECU_identification_table* id = tester.read_ECU_identification();
-      //if(id)
-      {
-        //printf("\r\nvehicleManufacturerECUHardwareNumber: %.*s\r\n", sizeof(id->vehicleManufacturerECUHardwareNumber), id->vehicleManufacturerECUHardwareNumber);
-      }
-
-      tester.read_DTC_by_status();
-
-      //trial(std::function<std::unique_ptr<KWP2000::RLI_ASS_tab>()>(tester.read_rli_ass));
-
-      //std::unique_ptr<KWP2000::RLI_ASS_tab> rli = tester.read_rli_ass();
-
-      if (!tester.stop_communication())
-        return 1;
-    }
-  }
-  catch (...)
-  {
-  }
-  return 0;
 }
