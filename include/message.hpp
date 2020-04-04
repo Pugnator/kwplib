@@ -173,7 +173,8 @@ typedef enum service_mnemonic
   KWP_IOCBLI,
   KWP_WDBLI,
   KWP_TP,
-  KWP_NR
+  KWP_NR,
+  KWP_NONE
 } service_mnemonic;
 
 typedef enum reply_nmemonic
@@ -184,7 +185,8 @@ typedef enum reply_nmemonic
   B_RR,
   ROOR,
   TA,
-  BTDCE
+  BTDCE,
+  NONE
 } reply_nmemonic;
 
 typedef struct

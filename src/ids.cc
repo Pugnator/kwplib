@@ -18,7 +18,7 @@ const kwp_service service_ids[] =
         {.request = 0x30, .reply = 0x70, .sae_name = "inputOutputControlByLocalIdentifier", .short_name = KWP_IOCBLI},
         {.request = 0x3B, .reply = 0x7B, .sae_name = "writeDataByLocalIdentifier", .short_name = KWP_WDBLI},
         {.request = 0x3E, .reply = 0x7E, .sae_name = "testerPresent", .short_name = KWP_TP},
-        {0, 0}};
+        {0, 0, nullptr, KWP_NONE}};
 
 const kwp_reply kwp_reply_table[] =
     {
@@ -29,5 +29,5 @@ const kwp_reply kwp_reply_table[] =
         {.reply = 0x31, .sae_name = "requestOutOfRange", .short_name = ROOR},
         {.reply = 0x72, .sae_name = "transferAborted", .short_name = GR},
         {.reply = 0x77, .sae_name = "blockTransferDataChecksumError", .short_name = BTDCE},
-        {0, 0}};
-}
+        {0, nullptr, NONE}};
+} // namespace KWP2000

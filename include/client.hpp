@@ -1,9 +1,21 @@
 #pragma once
+#ifdef WIN32
 #include <windows.h>
+#endif
 #include <message.hpp>
+#include <functional>
 #include <initializer_list>
 
 const uint16_t KWP_PHY_ADR = 0x6B8F;
+
+using namespace std;
+
+
+#ifdef WIN32
+  #define DEBUG_LOG printf
+#else
+  #define DEBUG_LOG(...)
+#endif
 
 namespace KWP2000
 {
@@ -31,15 +43,21 @@ public:
   bool writeDataByLocalIdentifier();
 
 private:
+#ifdef WIN32
   HANDLE open_port(uint8_t commport, uint32_t baudrate);
   void close_port(HANDLE commport);
+#else
+  void open_port(uint8_t commport, uint32_t baudrate);
+#endif
   void send_message(kwp_message &message);
   std::unique_ptr<kwp_message> read_response(kwp_message &request);
 
 private:
   const kwp_service *find_service_id(const service_mnemonic &name);
   const kwp_service *find_ident(const uint8_t &code);
+#ifdef WIN32
   HANDLE porth;
+#endif
   uint8_t portn;
 };
 

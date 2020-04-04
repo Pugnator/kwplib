@@ -1,3 +1,4 @@
+#include <client.hpp>
 #include <message.hpp>
 
 namespace KWP2000
@@ -8,12 +9,14 @@ ECU_identification_table ECU_ID;
 const kwp_service *kwp_message::get_service()
 {
   uint8_t id = data[header.type - 1];
+  #if defined (WIN32) && defined(__DEBUG)
   printf("Searching for 0x%X\r\n", id);
+  #endif
   for (auto i = 0; service_ids[i].request; ++i)
   {
     if (service_ids[i].request == id || service_ids[i].reply == id)
-    {
-      printf("found %s\r\n", service_ids[i].sae_name);
+    {      
+      DEBUG_LOG("found %s\r\n", service_ids[i].sae_name);      
       return &service_ids[i];
     }
   }
@@ -27,8 +30,8 @@ void kwp_message::add_service_id(const kwp_service &id)
 }
 
 void kwp_message::add_param(const uint8_t &param)
-{
-  printf("Param: 0x%X\r\n", param);
+{  
+  DEBUG_LOG("Param: 0x%X\r\n", param); 
   data[header.type + length++] = param;
 }
 
@@ -38,12 +41,12 @@ void kwp_message::add_payload(uint8_t *payload, uint8_t size)
 }
 
 void kwp_message::print()
-{
-  printf("Message header: 0x%X 0x%X 0x%X\r\n", header.format, header.target, header.source);
-  printf("Message of type 0x%X, length 0x%X [CRC: 0x%X]\r\n",
+{  
+  DEBUG_LOG("Message header: 0x%X 0x%X 0x%X\r\n", header.format, header.target, header.source);
+  DEBUG_LOG("Message of type 0x%X, length 0x%X [CRC: 0x%X]\r\n",
          header.type,
          length,
-         checksum);
+         checksum); 
 }
 
 void kwp_message::update_format_byte()
@@ -86,7 +89,6 @@ uint8_t kwp_header::get_sum()
 
 int16_t RLI_ASS_tab::get_water_temp()
 {
-  printf("%u\r\n", cwt);
   return cwt - 40; //N=E-40 [C]
 }
 
@@ -99,7 +101,7 @@ uint16_t RLI_ASS_tab::get_speed()
   return speed;
 }
 double RLI_ASS_tab::get_afr()
-{  
+{
   return 14.7 * (afr + 128) / 256; //N=14.7*(E+128)/256
 }
 uint16_t RLI_ASS_tab::get_rpm() //N=E*40 [об/мин]

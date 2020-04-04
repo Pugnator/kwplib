@@ -8,7 +8,7 @@ namespace KWP2000
 
 std::unique_ptr<kwp_message> kwpClient::process_command(const service_mnemonic &cmd, const std::initializer_list<uint8_t> &params)
 {
-  puts("\r\n====================\r\n");
+  DEBUG_LOG("\r\n====================\r\n");
   auto rq = find_service_id(cmd);
   if (!rq)
   {
@@ -72,9 +72,14 @@ bool kwpClient::start_diagnostic_session(const uint8_t baudrate)
   {
     return true;
   }
-  close_port(porth);  
+  
   uint16_t baud = baudrate == HIGH_BAUDRATE ? 38400 : 57600;
+  #ifdef WIN32
+  close_port(porth);
   porth = open_port(portn, baud);
+  #else
+  #endif
+  
   return true;
 }
 
@@ -95,10 +100,10 @@ ECU_identification_table *kwpClient::read_ECU_identification(const identificatio
   {
     return nullptr;
   }
-  printf("Size: 0x%X [%u]\r\n", resp->length, resp->length);
+  DEBUG_LOG("Size: 0x%X [%u]\r\n", resp->length, resp->length);
   for (auto i = 1; i < resp->length; i++)
   {
-    printf("%c", resp->data[resp->header.type + i]);
+    DEBUG_LOG("%c", resp->data[resp->header.type + i]);
   }
 
   std::memcpy(ECU_ID.data, &resp->data[resp->header.type + 1], sizeof(ECU_identification_table));
@@ -141,9 +146,9 @@ std::unique_ptr<RLI_ASS_tab> kwpClient::read_rli_ass()
   std::memcpy(rlitab->tab, payload, sizeof(rlitab->tab));
   for (auto i = 0; i < 36; i++)
   {
-    printf("%02X ", rlitab->tab[i]);
+    DEBUG_LOG("%02X ", rlitab->tab[i]);
   }
-  puts("");
+  DEBUG_LOG("");
   return rlitab;
 }
 
@@ -156,10 +161,10 @@ bool kwpClient::read_DTC_by_status()
   }
   uint8_t *payload = &resp->data[resp->header.type];
   uint8_t dtc_num = payload[0];
-  printf("DTC number: %u\r\n", dtc_num);
+  DEBUG_LOG("DTC number: %u\r\n", dtc_num);
   for (auto i = 1; i < resp->length - 1; i += 3)
   {
-    printf("DTC: P%04X\r\n", (payload[i] << 8) | (payload[i + 1] & 0xFF));
+    DEBUG_LOG("DTC: P%04X\r\n", (payload[i] << 8) | (payload[i + 1] & 0xFF));
   }
   return true;
 }
