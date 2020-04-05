@@ -155,7 +155,9 @@ typedef enum recordLocalIdentifier
   RLI_IR = 0xA0,
   RLI_BSN = 0xA1,
   RLI_ESN = 0xA2,
-  RLI_MD = 0xA3
+  RLI_MD = 0xA3,
+  RLI_OLT = 0x0F,
+  RLI_FULL = 0x0E
 } recordLocalIdentifier;
 
 typedef enum service_mnemonic

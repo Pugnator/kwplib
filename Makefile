@@ -94,6 +94,10 @@ $(OBJDIR)/client_win32.o: $(SRCDIR)/client_win32.cc
 $(OBJDIR)/main.o: $(SRCDIR)/main.cc
 	$(MKDIR_P) `dirname $@`
 	$(GPP) -c -o $@ $< $(CXXFLAGS)
+else ifeq ($(PLATFORM), STM32)
+$(OBJDIR)/client_win32.o: $(SRCDIR)/client_stm32.cc
+	$(MKDIR_P) `dirname $@`
+	$(GPP) -c -o $@ $< $(CXXFLAGS)
 endif
 
 
