@@ -5,7 +5,7 @@ int main()
 {
   try
   {
-    auto tester = std::make_unique<KWP2000::kwpClient>(4, 10400);    
+    auto tester = std::make_unique<KWP2000::kwpClient>(6, 10400);    
 
     uint8_t retry = 10;
 

@@ -38,8 +38,8 @@ SRC:=\
     $(SRCDIR)/client.cc \
     $(SRCDIR)/message.cc \
     $(SRCDIR)/commands.cc \
-		$(SRCDIR)/dtc.cc \
-		$(SRCDIR)/ids.cc
+	$(SRCDIR)/dtc.cc \
+	$(SRCDIR)/ids.cc
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 ifeq ($(PLATFORM),WIN32)
@@ -52,8 +52,19 @@ endif
 KWPEXEC:=$(OUTDIR)/kwp.exe
 KWPLIB:=$(OUTDIR)/kwp.a
 
-FLAGS:=-ffunction-sections -fms-extensions -fdata-sections -I.
-CXXFLAGS+=-std=gnu++14 $(FLAGS) -Iinclude
+
+CXXFLAGS+= -Iinclude \
+	--std=gnu++14 \
+	-DSTM32F10X_MD -D_GNU_SOURCE -D__STM32__\
+	-D_REENT_SMALL -D_REENT_GLOBAL_ATEXIT \
+	-Wno-write-strings \
+	-fno-rtti \
+	-fno-exceptions \
+	-Dassert_param="" \
+	-fpermissive \
+	-fno-builtin \
+	-mlittle-endian -mthumb -mcpu=cortex-m3 -msoft-float
+
 LDFLAGS:=-Wl,--gc-sections
 
 
@@ -119,7 +130,7 @@ endif
 
 $(KWPEXEC): $(OBJ)
 	$(GPP) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
-	#$(STRIP) -s $(KWPEXEC)
+	$(STRIP) -s $(KWPEXEC)
 
 $(KWPLIB): $(OBJ)
 	ar rcs $@ $+
