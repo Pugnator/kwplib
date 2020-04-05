@@ -31,7 +31,7 @@ $(error bad platform specified)
 endif
 
 SRCDIR:=src
-OBJDIR:=obj
+OBJDIR:=obj_$(PLATFORM)
 OUTDIR:=bin
 
 SRC:=\
@@ -58,7 +58,7 @@ LDFLAGS:=-Wl,--gc-sections
 ifeq ($(BUILDTYPE), DEBUG)
 	CXXFLAGS+=-Og -g3 -D__DEBUG=1
 else ifeq ($(BUILDTYPE), RELEASE)
-	CXXFLAGS+=-flto -Os -s -D__DEBUG=0 -Werror
+	CXXFLAGS+= -Os -s -D__DEBUG=0 -Werror
 else
 $(error bad buildtype specified)
 endif
@@ -121,8 +121,8 @@ $(KWPLIB): $(OBJ)
 
 .PHONY: clean
 clean:
-	$(RM) $(OBJ)	
-	$(RM) $(OBJDIR)
+	$(RM) $(OBJ)
+	$(RM) obj*
 	$(RM) $(OUTDIR)
 	
 .PHONY: silent

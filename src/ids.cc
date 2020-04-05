@@ -1,4 +1,4 @@
-#include <message.hpp>
+#include "message.hpp"
 
 namespace KWP2000
 {

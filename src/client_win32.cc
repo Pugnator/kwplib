@@ -1,5 +1,5 @@
-#include <message.hpp>
-#include <client.hpp>
+#include "message.hpp"
+#include "client.hpp"
 #include <exception>
 
 namespace KWP2000

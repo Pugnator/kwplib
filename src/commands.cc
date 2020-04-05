@@ -1,6 +1,6 @@
-#include <message.hpp>
-#include <client.hpp>
-#include <dtc.hpp>
+#include "message.hpp"
+#include "client.hpp"
+#include "dtc.hpp"
 #include <algorithm>
 
 namespace KWP2000
@@ -79,7 +79,7 @@ bool kwpClient::start_diagnostic_session(const uint8_t baudrate)
   porth = open_port(portn, baud);
   #else
   #endif
-  
+
   return true;
 }
 
