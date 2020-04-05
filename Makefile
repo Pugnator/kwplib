@@ -117,11 +117,11 @@ endif
 
 $(KWPEXEC): $(OBJ)
 	$(GPP) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
-	$(STRIP) -s $(KWPEXEC)
+	#$(STRIP) -s $(KWPEXEC)
 
 $(KWPLIB): $(OBJ)
 	ar rcs $@ $+
-	$(STRIP) -s $(KWPLIB)
+	#$(STRIP) -s $(KWPLIB)
 
 .PHONY: clean
 clean:
