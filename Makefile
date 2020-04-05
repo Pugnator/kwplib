@@ -45,6 +45,8 @@ OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 ifeq ($(PLATFORM),WIN32)
 OBJ+=$(OBJDIR)/client_win32.o
 OBJ+=$(OBJDIR)/main.o
+else ifeq ($(PLATFORM), STM32)
+OBJ+=$(OBJDIR)/client_stm32.o
 endif
 
 KWPEXEC:=$(OUTDIR)/kwp.exe
@@ -95,7 +97,7 @@ $(OBJDIR)/main.o: $(SRCDIR)/main.cc
 	$(MKDIR_P) `dirname $@`
 	$(GPP) -c -o $@ $< $(CXXFLAGS)
 else ifeq ($(PLATFORM), STM32)
-$(OBJDIR)/client_win32.o: $(SRCDIR)/client_stm32.cc
+$(OBJDIR)/client_stm32.o: $(SRCDIR)/client_stm32.cc
 	$(MKDIR_P) `dirname $@`
 	$(GPP) -c -o $@ $< $(CXXFLAGS)
 endif
@@ -117,11 +119,11 @@ endif
 
 $(KWPEXEC): $(OBJ)
 	$(GPP) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
-	$(STRIP) -s $(KWPEXEC)
+	#$(STRIP) -s $(KWPEXEC)
 
 $(KWPLIB): $(OBJ)
 	ar rcs $@ $+
-	$(STRIP) -s $(KWPLIB)
+	#$(STRIP) -s $(KWPLIB)
 
 .PHONY: clean
 clean:
