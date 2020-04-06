@@ -133,7 +133,7 @@ $(KWPEXEC): $(OBJ)
 	$(STRIP) -s $(KWPEXEC)
 
 $(KWPLIB): $(OBJ)
-	ar rcs $@ $+
+	$(AR) rcs $@ $+
 	#$(STRIP) -s $(KWPLIB)
 
 .PHONY: clean
