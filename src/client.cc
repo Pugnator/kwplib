@@ -16,15 +16,3 @@ const kwp_service *kwpClient::find_service_id(const service_mnemonic &name)
   return nullptr;
 }
 } // namespace KWP2000
-
-template <typename T>
-auto trial(std::function<T> func)
-{
-  auto tries = 10;
-  auto result = func();
-  while (!result && --tries)
-  {
-    result = func();
-  }
-  return result;
-}

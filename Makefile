@@ -10,6 +10,7 @@ STRIP:=strip
 GPP:=g++
 CP = cp
 MKDIR_P = mkdir -p
+FMT:=fmt-6.2.0
 
 else ifeq ($(PLATFORM), STM32)
 
@@ -40,19 +41,21 @@ SRC:=\
     $(SRCDIR)/commands.cc \
 	$(SRCDIR)/dtc.cc \
 	$(SRCDIR)/ids.cc
+	#$(SRCDIR)/server.cc 
 
 OBJ:=$(SRC:%.cc=$(OBJDIR)/%.o)
 ifeq ($(PLATFORM),WIN32)
 OBJ+=$(OBJDIR)/client_win32.o
-OBJ+=$(OBJDIR)/main.o
 else ifeq ($(PLATFORM), STM32)
 OBJ+=$(OBJDIR)/client_stm32.o
 endif
 
 KWPEXEC:=$(OUTDIR)/kwp.exe
-KWPLIB:=$(OUTDIR)/kwp.a
+KWPLIB:=$(OUTDIR)/libkwp.a
 
-
+ifeq ($(PLATFORM),WIN32)
+CXXFLAGS+= -Iinclude --std=gnu++14 -I$(FMT)/include 
+else ifeq ($(PLATFORM), STM32)
 CXXFLAGS+= -Iinclude \
 	--std=gnu++14 \
 	-DSTM32F10X_MD -D_GNU_SOURCE -D__STM32__\
@@ -64,14 +67,15 @@ CXXFLAGS+= -Iinclude \
 	-fpermissive \
 	-fno-builtin \
 	-mlittle-endian -mthumb -mcpu=cortex-m3 -msoft-float
+endif
+
 
 LDFLAGS:=-Wl,--gc-sections
 
-
 ifeq ($(BUILDTYPE), DEBUG)
-	CXXFLAGS+=-Og -g3 -D__DEBUG=1
+	CXXFLAGS+=-Og -g3 -D__DEBUG=1 -DDEBUG
 else ifeq ($(BUILDTYPE), RELEASE)
-	CXXFLAGS+= -Os -s -D__DEBUG=0 -Werror
+	CXXFLAGS+= -O3 -s -D__DEBUG=0 -Werror
 else
 $(error bad buildtype specified)
 endif
@@ -79,7 +83,7 @@ endif
 .PHONY: all
 all: dirs
 ifeq ($(PLATFORM),WIN32)
-all: $(KWPEXEC) | silent
+all: $(KWPEXEC) $(KWPLIB) | silent
 else ifeq ($(PLATFORM), STM32)
 all: $(KWPLIB) | silent
 endif
@@ -128,9 +132,9 @@ ifeq ($(PLATFORM),WIN32)
 $(OBJ)+=$(OBJDIR)/kwp.res
 endif
 
-$(KWPEXEC): $(OBJ)
-	$(GPP) -o $@ $^ $(CXXFLAGS) $(LDFLAGS)
-	$(STRIP) -s $(KWPEXEC)
+$(KWPEXEC): $(OBJ) $(OBJDIR)/main.o
+	$(GPP) -o $@ $^ $(CXXFLAGS) $(LDFLAGS) -L$(FMT) -lfmt
+	#$(STRIP) -s $(KWPEXEC)
 
 $(KWPLIB): $(OBJ)
 	$(AR) rcs $@ $+

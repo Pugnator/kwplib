@@ -1,4 +1,5 @@
 #pragma once
+
 #include <stdint.h>
 #include <string>
 #include <cstring>
@@ -15,65 +16,6 @@ const uint8_t KWP_MAX_DATA_SIZE = 128;
 const uint8_t NORMAL_BAUDRATE = 0x0A;
 const uint8_t HIGH_BAUDRATE = 0x26;
 const uint8_t ENHANCED_BAUDRATE = 0x39;
-
-typedef union ECU_identification {
-  struct __attribute__((packed, aligned(128)))
-  {
-    uint8_t VIN[19];
-    uint8_t vehicleManufacturerECUHardwareNumber[16];
-    uint8_t systemSupplierECUHardwareNumber[10];
-    uint8_t systemSupplierECUSoftwareNumber[10];
-    uint8_t systemNameOrEngineType[15];
-    uint8_t repairShopCode[7];
-    uint8_t ProgrammingDate[10]; //(ДД-ММ-ГГГГ
-    uint8_t vehicleManufacturerECUIdentifier[8];
-  };
-  uint8_t data[128] = {'.'};
-} ECU_identification_table;
-
-typedef union RLI_ASS_tab {
-  struct
-  {
-    uint8_t equip_1;     //#1
-    uint8_t equip_2;     //#2
-    uint8_t status_1;    //#3
-    uint8_t status_2;    //#4
-    uint8_t dtc_1;       //#5
-    uint8_t dtc_2;       //#6
-    uint8_t dtc_3;       //#7
-    uint8_t dtc_4;       //#8
-    uint8_t cwt;         //#9
-    uint8_t afr;         //#10
-    uint8_t tps;         //#11
-    uint8_t rpm;         //#12
-    uint8_t idle_rpm;    //#13
-    uint8_t needed_iac;  //#14
-    uint8_t iac;         //#15
-    uint8_t correction;  //#16
-    int8_t adv;          //#17
-    uint8_t speed;       //#18
-    uint8_t voltage;     //#19
-    uint8_t lamda_state; //#20
-    uint16_t inj;        //#21-22
-    uint16_t maf;        //#24-24
-    uint16_t caf;        //#25-26
-    uint16_t hff;        //#27-28
-    uint16_t tff;        //#29-30
-    uint16_t eeprom_crc; //31-32
-  };
-  uint8_t tab[34];
-
-  int16_t get_water_temp();
-  uint16_t get_throttle();
-  uint16_t get_speed();
-  double get_afr();
-  uint16_t get_rpm();
-  uint16_t get_idle_rpm();
-  double get_correction();
-  double get_advance();
-  double get_battery();
-  double get_nbo_voltage();
-} RLI_ASS_tab;
 
 typedef union equipment_word_1 {
   struct
@@ -132,8 +74,6 @@ typedef union dtc_flags_4 {
   uint8_t byte;
 } dtc_flags_4;
 
-extern ECU_identification_table ECU_ID;
-
 typedef enum identificationOption
 {
   ECUIDT = 0x80,
@@ -156,8 +96,8 @@ typedef enum recordLocalIdentifier
   RLI_BSN = 0xA1,
   RLI_ESN = 0xA2,
   RLI_MD = 0xA3,
-  RLI_OLT = 0x0F,
-  RLI_FULL = 0x0E
+  RLI_OLT = 0x0D,
+  RLI_TRS_LONG = 0x0F
 } recordLocalIdentifier;
 
 typedef enum service_mnemonic
